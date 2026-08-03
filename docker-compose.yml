@@ -1,0 +1,37 @@
+services:
+  velodyne_rmd:
+    container_name: velodyne-rmd
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USERNAME: ${ROS_USER:-rosuser}
+        USER_UID: ${ROS_UID:-1000}
+        USER_GID: ${ROS_GID:-1000}
+    # host network必須: VLP-16のUDP(2368)受信 + SocketCAN(can0)アクセスの両方に使う
+    network_mode: host
+    ipc: host
+    shm_size: 2gb
+    # rviz2のGPUレンダリング用
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - "44"   # video
+      - "992"  # render
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - XAUTHORITY=/home/${ROS_USER:-rosuser}/.Xauthority
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+      - RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
+      # 大きなPointCloud2メッセージ用にSHMセグメントを拡大 (config/fastdds_profile.xml)
+      - FASTRTPS_DEFAULT_PROFILES_FILE=/workspaces/velodyne-rmd/config/fastdds_profile.xml
+      - LANG=ja_JP.UTF-8
+      - TZ=${TZ:-Asia/Tokyo}
+    volumes:
+      - ./:/workspaces/velodyne-rmd
+      # Wayland環境ではXAUTHORITYが/run/user/1000/.mutter-Xwaylandauth.*を指す
+      - ${XAUTHORITY:-${HOME}/.Xauthority}:/home/${ROS_USER:-rosuser}/.Xauthority:ro
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    stdin_open: true
+    tty: true

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- /velodyne_points (~640KB/msg) がデフォルトSHMセグメント512KBに収まらず
+     UDPフォールバックでドロップするため、セグメントを10MBへ拡大する -->
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+  <transport_descriptors>
+    <transport_descriptor>
+      <transport_id>shm_large_segment</transport_id>
+      <type>SHM</type>
+      <segment_size>10485760</segment_size>
+    </transport_descriptor>
+    <transport_descriptor>
+      <transport_id>udp_transport</transport_id>
+      <type>UDPv4</type>
+    </transport_descriptor>
+  </transport_descriptors>
+  <participant profile_name="large_shm_participant" is_default_profile="true">
+    <rtps>
+      <userTransports>
+        <transport_id>shm_large_segment</transport_id>
+        <transport_id>udp_transport</transport_id>
+      </userTransports>
+      <useBuiltinTransports>false</useBuiltinTransports>
+    </rtps>
+  </participant>
+</profiles>
