@@ -3,10 +3,11 @@
 
 モータを上限〜下限の間で往復掃引しつつ、実測角度からTFを配信する:
 
-  base_link --(動的: モータ角度による回転)--> tilt_link --(静的: 取付オフセット)--> velodyne
+  base_link --(動的: モータ角度による回転)--> tilt_link --(静的: 取付オフセット)--> 各センサ
 
-velodyneドライバの点群(frame_id: velodyne)はこのTFでbase_link系に正しく変換され、
+センサ点群(frame_id: velodyne / livox_frame)はこのTFでbase_link系に正しく変換され、
 rviz2(Fixed Frame: base_link)でモータが回転しても静止環境が静止して見える。
+取付オフセットはlimits.yamlのmounts:に記述(チルト軸原点からの並進[m])。
 
 limits.yaml(ジョグ手順で生成)から上限/下限/水平角度を読む。
 パラメータ:
@@ -61,6 +62,7 @@ class TiltNode(Node):
         self.gear = float(lim.get("gear_ratio", 6.2))
         self.axis = AXES[str(lim.get("axis", "y")).lower()]
         self.sign = float(lim.get("sign", 1.0))
+        self.mounts = lim.get("mounts", {"velodyne": {}})
         # マージンはlimits.yaml優先(較正とセットで管理)、無ければノードパラメータ
         margin = float(lim.get("margin_deg", self.get_parameter("margin_deg").value))
 
@@ -122,12 +124,18 @@ class TiltNode(Node):
             self._control_tick()
 
     def _publish_static_mount(self):
-        t = TransformStamped()
-        t.header.stamp = self.get_clock().now().to_msg()
-        t.header.frame_id = "tilt_link"
-        t.child_frame_id = "velodyne"
-        t.transform.rotation.w = 1.0
-        self.static_b.sendTransform(t)
+        transforms = []
+        for frame, ofs in self.mounts.items():
+            t = TransformStamped()
+            t.header.stamp = self.get_clock().now().to_msg()
+            t.header.frame_id = "tilt_link"
+            t.child_frame_id = frame
+            t.transform.translation.x = float(ofs.get("x", 0.0))
+            t.transform.translation.y = float(ofs.get("y", 0.0))
+            t.transform.translation.z = float(ofs.get("z", 0.0))
+            t.transform.rotation.w = 1.0
+            transforms.append(t)
+        self.static_b.sendTransform(transforms)
 
     def _tf_tick(self):
         with self.lock:

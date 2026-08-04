@@ -38,6 +38,26 @@ RUN apt-get update && \
     iproute2 && \
     rm -rf /var/lib/apt/lists/*
 
+# Livox SDK2 (Mid-360はSDK2系。SDK1やlivox_ros_driverでは動かない)
+RUN git clone --depth 1 https://github.com/Livox-SDK/Livox-SDK2.git /tmp/Livox-SDK2 && \
+    cmake -S /tmp/Livox-SDK2 -B /tmp/Livox-SDK2/build -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build /tmp/Livox-SDK2/build -j"$(nproc)" && \
+    cmake --install /tmp/Livox-SDK2/build && \
+    ldconfig && \
+    rm -rf /tmp/Livox-SDK2
+
+# livox_ros_driver2 (Mid-360用ROS 2ドライバ)。build.shを使わず直接colcon:
+# package_ROS2.xml→package.xmlのコピーがbuild.shの実質的な仕事。
+RUN mkdir -p /opt/livox_ws/src && \
+    git clone --depth 1 https://github.com/Livox-SDK/livox_ros_driver2.git \
+        /opt/livox_ws/src/livox_ros_driver2 && \
+    cp /opt/livox_ws/src/livox_ros_driver2/package_ROS2.xml \
+       /opt/livox_ws/src/livox_ros_driver2/package.xml && \
+    bash -c "source /opt/ros/jazzy/setup.bash && \
+        cd /opt/livox_ws && \
+        colcon build --cmake-args -DROS_EDITION=ROS2 -DDISTRO_ROS=jazzy \
+            -DCMAKE_BUILD_TYPE=Release"
+
 RUN locale-gen en_US.UTF-8 ja_JP.UTF-8 && \
     update-locale LANG=ja_JP.UTF-8
 
@@ -69,7 +89,9 @@ RUN set -eux; \
     chmod 0440 "/etc/sudoers.d/90-${USERNAME}"
 
 RUN echo "source /opt/ros/jazzy/setup.bash" >> /etc/skel/.bashrc && \
+    echo "source /opt/livox_ws/install/setup.bash" >> /etc/skel/.bashrc && \
     echo "source /opt/ros/jazzy/setup.bash" >> /home/${USERNAME}/.bashrc && \
+    echo "source /opt/livox_ws/install/setup.bash" >> /home/${USERNAME}/.bashrc && \
     echo "alias ll='ls -alF'" >> /home/${USERNAME}/.bashrc && \
     mkdir -p /workspaces && \
     chown -R ${USER_UID}:${USER_GID} /home/${USERNAME} /workspaces
