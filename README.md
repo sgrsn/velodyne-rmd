@@ -1,5 +1,7 @@
 # Velodyne VLP-16 + Livox Mid-360 + RMD-X8 Pro チルト機構
 
+<img width="4240" height="3944" alt="IMG_9165" src="https://github.com/user-attachments/assets/c28bfd71-86df-4b10-9001-3c10e0d740e9" />
+
 VLP-16(天面にMid-360)をRMD-X8 Proで上下に掃引し、垂直測定範囲を拡張する
 デモ環境(ROS 2 Jazzy + Docker)。モータ実測角からTFを配信するため、掃引中も
 rviz2上で環境は静止したまま点群が蓄積される。センサはIP疎通が取れたものだけ
