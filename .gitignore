@@ -3,3 +3,7 @@
 .omx
 .codex
 .gjc
+bags/
+videos/
+
+__pycache__

@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 
 if docker compose ps --status running velodyne_rmd >/dev/null 2>&1; then
     docker compose exec velodyne_rmd bash -c \
-        "pkill -INT -f tilt_node.py 2>/dev/null || true"
+        "pkill -INT -f '[t]ilt_node.py|[t]ilt_servo.py|[p]erception.py|[t]racking_controller.py' 2>/dev/null || true"
     sleep 1
     if [[ "${1:-}" == "--release" ]]; then
         docker compose exec velodyne_rmd python3 /workspaces/velodyne-rmd/app/jog.py release || true

@@ -113,6 +113,24 @@ class RmdMotor:
         self._xfer(0x81)
         self._xfer(0x80)
 
+    def command_speed(self, dps):
+        """速度閉ループ指令(0xA2)。0.01 dps/LSB int32。
+
+        指令単位がロータ角か出力軸角かはファーム依存のため実測で判定すること
+        (probe_speed.py)。応答は0x9C同等の温度/電流/速度/エンコーダ。
+        応答が得られなければNone(本ファームで0xA2非対応の可能性)。
+        """
+        payload = b"\x00\x00\x00" + struct.pack("<i", int(round(dps * 100)))
+        d = self._xfer(0xA2, payload, retries=0)
+        if d is None:
+            return None
+        return {
+            "temp_c": struct.unpack("b", d[1:2])[0],
+            "current_a": self._s16(d, 2) * 0.01,
+            "speed_dps": self._s16(d, 4),
+            "encoder": self._u16(d, 6),
+        }
+
     def command_position(self, target_deg, speed_dps):
         """位置指令を送るだけ(待たない)。"""
         counts = int(round(target_deg * 100))

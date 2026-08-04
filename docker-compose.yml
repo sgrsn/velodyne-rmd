@@ -30,6 +30,9 @@ services:
       - TZ=${TZ:-Asia/Tokyo}
     volumes:
       - ./:/workspaces/velodyne-rmd
+      # ros2 bag record をコンテナ内 ~/rosbag に保存してもホストに残るように。
+      # (コンテナFS内に保存すると docker compose down で消える)
+      - ${HOME}/rosbag:/home/${ROS_USER:-rosuser}/rosbag
       # Wayland環境ではXAUTHORITYが/run/user/1000/.mutter-Xwaylandauth.*を指す
       - ${XAUTHORITY:-${HOME}/.Xauthority}:/home/${ROS_USER:-rosuser}/.Xauthority:ro
       - /tmp/.X11-unix:/tmp/.X11-unix:rw

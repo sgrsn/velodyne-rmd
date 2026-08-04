@@ -65,6 +65,14 @@ ENV LANG=ja_JP.UTF-8 \
     LANGUAGE=ja_JP:ja \
     LC_ALL=ja_JP.UTF-8
 
+# bag再生→rviz2→動画化 (scripts/bag2video.sh) 用: 仮想Xサーバと画面キャプチャ
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ffmpeg \
+    xvfb \
+    x11-utils && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN set -eux; \
     existing_gid_group="$(getent group "${USER_GID}" | cut -d: -f1 || true)"; \
     if [ -n "${existing_gid_group}" ] && [ "${existing_gid_group}" != "${USERNAME}" ]; then \
